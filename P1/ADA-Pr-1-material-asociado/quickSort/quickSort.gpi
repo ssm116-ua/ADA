@@ -5,7 +5,7 @@ set xlabel "Array size"
 set ylabel "CPU time (ms)"
 
 set title  "Quick Sort: Empirical Analysis of Exact Time Complexity"
-#set xtics("2¹⁶ 65536)
+set xtics("2¹⁵" 32768, 2¹⁶" 65536,)
 
 plot "quickSort.CPUtimes" using 1:2 with points title "CPU Times of sample"
 
