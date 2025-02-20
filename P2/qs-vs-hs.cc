@@ -192,8 +192,8 @@ int main ()
         for (int i = 0; i < sizeAverage; i++)
         {
             
-            middle_QuickSort(v, 0, size-1, stepsQuickSort);
-          
+            middle_QuickSort(vRandom, 0, size-1, stepsQuickSort);
+            
             
         }
     }
