@@ -29,14 +29,14 @@ void printTable()
         << endl
         << "# Number of samples (arrays of integer)"
         << endl
-        << "# \t    RANDOM ARRAYS \t\t SORTED ARRAYS \t\t REVERSE SORTED ARRAYS"
+        << "#" <<setw(11) << "RANDOM ARRAYS" <<setw(11) <<"SORTED ARRAYS"<<setw(11) <<"REVERSE SORTED ARRAYS"
         << endl
-        << "# \t    ------------------- \t ------------------- \t -----------------------"
-        << endl
-        << "# \t Size \t QuickSort \t HeapSort \t QuickSort \t HeapSort \t QuickSort \t HeapSort"
-        << endl
-        << "#===================================================================================="
-        << endl;
+        << "#" << setw(11) <<"-------------------"<< setw(11) <<"-------------------" << setw(11) <<"-----------------------" << endl
+        << "#" << setw(7) << "Size" 
+        << setw(13) << "QuickSort" << setw(11) << "HeapSort" 
+        << setw(11) << "QuickSort" << setw(11) << "HeapSort" 
+        << setw(11) << "QuickSort" << setw(11) << "HeapSort" << endl
+        << "#===================================================================================="<< endl;
 }
 
 
@@ -193,7 +193,7 @@ int main ()
             exit (EXIT_FAILURE);  
         }
 
-        cout << "\t" <<size << "\t\t" << std::flush; 
+        cout << setw(9) <<size<< std::flush; 
 
         for (size_t j = 0; j < size; j++)
         {
@@ -214,7 +214,7 @@ int main ()
             vStepsAverageQuick[i] = stepsQuickSort;
         }
 
-        cout<< fixed << setprecision(3) << stepsInMillions(stepsAverage(vStepsAverageQuick)) << "\t";
+        cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsAverage(vStepsAverageQuick));
         
         for (int i = 0; i < sizeAverage; i++)
         {
@@ -224,23 +224,23 @@ int main ()
             vStepsAverageHeap[i] = stepsHeapSort;
         }
         
-        cout<< fixed << setprecision(3) << stepsInMillions(stepsAverage(vStepsAverageHeap))<< "\t\t" <<std::flush;
+        cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsAverage(vStepsAverageHeap)) <<std::flush;
 
         stepsQuickSort = 0;
         middle_QuickSort(vSorted,0 ,size-1, stepsQuickSort);
-        cout<< fixed << setprecision(3) << stepsInMillions(stepsQuickSort)<< "\t" << std::flush;
+        cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsQuickSort) << std::flush;
 
         stepsHeapSort = 0;
         heapSort(vSorted,size, stepsHeapSort);
-        cout<< fixed << setprecision(3) << stepsInMillions(stepsHeapSort)<< "\t\t" << std::flush;
+        cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsHeapSort) << std::flush;
 
         stepsQuickSort = 0;
         middle_QuickSort(vReverse,0 ,size-1, stepsQuickSort);
-        cout<< fixed << setprecision(3) << stepsInMillions(stepsQuickSort)<< "\t" << std::flush;
+        cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsQuickSort) << std::flush;
 
         stepsHeapSort = 0;
         heapSort(vReverse,size, stepsHeapSort);
-        cout<< fixed << setprecision(3) << stepsInMillions(stepsHeapSort)<< endl << std::flush;
+        cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsHeapSort)<< endl << std::flush;
 
 
         delete[] vRandom;
