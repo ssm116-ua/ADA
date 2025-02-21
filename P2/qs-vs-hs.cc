@@ -29,13 +29,13 @@ void printTable()
         << endl
         << "# Number of samples (arrays of integer)"
         << endl
-        << "# \t    RANDOM ARRAYS \t SORTED ARRAYS \t\tREVERSE SORTED ARRAYS"
+        << "# \t    RANDOM ARRAYS \t\t SORTED ARRAYS \t\t REVERSE SORTED ARRAYS"
         << endl
-        << "# \t    -------------------  -------------------  -----------------------"
+        << "# \t    ------------------- \t ------------------- \t -----------------------"
         << endl
-        << "#   Size    QuickSort  HeapSort  QuickSort  HeapSort  QuickSort  HeapSort"
+        << "# \t Size \t QuickSort \t HeapSort \t QuickSort \t HeapSort \t QuickSort \t HeapSort"
         << endl
-        << "#============================================================================"
+        << "#===================================================================================="
         << endl;
 }
 
@@ -48,6 +48,12 @@ double stepsAverage (long long array[])
         sum += array[i];
     }
     return sum / sizeAverage;
+}
+
+double stepsInMillions (long long steps)
+{
+    double stepsDouble = steps / 1e6;
+    return stepsDouble;
 }
 
 //--------------------------------------------------------------
@@ -87,8 +93,8 @@ void middle_QuickSort(int *v, long left, long right, long long &steps) {
             steps++;
         } while (i <= j);
         // Repeat for each non-empty subarray:
-        if (left < j) middle_QuickSort(v, left, j);
-        if (i < right) middle_QuickSort(v, i, right);
+        if (left < j) middle_QuickSort(v, left, j, steps);
+        if (i < right) middle_QuickSort(v, i, right, steps);
     }
 }
 
@@ -116,11 +122,17 @@ void sink(int *v, size_t n, size_t i, long long &steps)
 
         // If the left child exists and is larger than the root
         if (l < n && v[l] > v[largest])
+        {
+            steps++;
             largest = l;
+        }
 
         // If the right child exists and is larger than the largest so far
         if (r < n && v[r] > v[largest])
+         {
+            steps++;
             largest = r;
+         } 
 
         // If the largest is still the root, the process is done
         if (largest == i)
@@ -159,6 +171,7 @@ void heapSort(int *v, size_t n, long long &steps)
     }
 }
 
+
 int main ()
 {
     srand(0);
@@ -167,7 +180,10 @@ int main ()
     {
         long long stepsQuickSort = 0, stepsHeapSort = 0;
         size_t size = size_t( pow(2,exp) );
+        long long* vStepsAverageQuick = new long long [sizeAverage];
+        long long* vStepsAverageHeap = new long long [sizeAverage];
         int* vRandom = new int [size];
+        int* vRandomCopy = new int [size];
         int* vSorted = new int [size];
         int* vReverse = new int [size];
 
@@ -177,13 +193,14 @@ int main ()
             exit (EXIT_FAILURE);  
         }
 
-        cout << size << "\t\t" << std::flush; 
+        cout << "\t" <<size << "\t\t" << std::flush; 
 
         for (size_t j = 0; j < size; j++)
         {
             vRandom[j] = rand();
         } 
 
+        
         copyArray(vRandom, vSorted, size);
         sort(vSorted, vSorted+size);
         copyArray(vRandom, vReverse, size);
@@ -191,11 +208,45 @@ int main ()
 
         for (int i = 0; i < sizeAverage; i++)
         {
-            
-            middle_QuickSort(vRandom, 0, size-1, stepsQuickSort);
-            
-            
+            stepsQuickSort = 0;
+            copyArray(vRandom, vRandomCopy, size);
+            middle_QuickSort(vRandomCopy,0 ,size-1, stepsQuickSort);
+            vStepsAverageQuick[i] = stepsQuickSort;
         }
+
+        cout<< fixed << setprecision(3) << stepsInMillions(stepsAverage(vStepsAverageQuick)) << "\t";
+        
+        for (int i = 0; i < sizeAverage; i++)
+        {
+            stepsHeapSort= 0;
+            copyArray(vRandom, vRandomCopy, size);
+            heapSort(vRandomCopy,size, stepsHeapSort);
+            vStepsAverageHeap[i] = stepsHeapSort;
+        }
+        
+        cout<< fixed << setprecision(3) << stepsInMillions(stepsAverage(vStepsAverageHeap))<< "\t\t" <<std::flush;
+
+        stepsQuickSort = 0;
+        middle_QuickSort(vSorted,0 ,size-1, stepsQuickSort);
+        cout<< fixed << setprecision(3) << stepsInMillions(stepsQuickSort)<< "\t" << std::flush;
+
+        stepsHeapSort = 0;
+        heapSort(vSorted,size, stepsHeapSort);
+        cout<< fixed << setprecision(3) << stepsInMillions(stepsHeapSort)<< "\t\t" << std::flush;
+
+        stepsQuickSort = 0;
+        middle_QuickSort(vReverse,0 ,size-1, stepsQuickSort);
+        cout<< fixed << setprecision(3) << stepsInMillions(stepsQuickSort)<< "\t" << std::flush;
+
+        stepsHeapSort = 0;
+        heapSort(vReverse,size, stepsHeapSort);
+        cout<< fixed << setprecision(3) << stepsInMillions(stepsHeapSort)<< endl << std::flush;
+
+
+        delete[] vRandom;
+        delete[] vRandomCopy;
+        delete[] vSorted;
+        delete[] vReverse;
     }
     
 
@@ -203,3 +254,4 @@ int main ()
 
     return 0;
 }
+ 
