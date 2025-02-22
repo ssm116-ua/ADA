@@ -123,26 +123,24 @@ void sink(int *v, size_t n, size_t i, long long &steps)
         // If the left child exists and is larger than the root
         if (l < n && v[l] > v[largest])
         {
-            steps++;
             largest = l;
         }
 
         // If the right child exists and is larger than the largest so far
         if (r < n && v[r] > v[largest])
          {
-            steps++;
             largest = r;
          } 
 
         // If the largest is still the root, the process is done
         if (largest == i)
         {
-            steps++;
             break;
         } 
 
         // Otherwise, swap the new largest with the current node i and repeat the process with the children
         swap(v[i], v[largest]);
+        steps++;
         i = largest;
     } while (true);
 }
@@ -155,8 +153,9 @@ void heapSort(int *v, size_t n, long long &steps)
     // Starting from the last non-leaf node (right to left), sink each element to construct the heap.
     for (size_t i = n / 2 - 1; true; i--) {
         sink(v, n, i, steps);
-        steps++;
+        
         if (i == 0) break; // As size_t is an unsigned type
+        steps++;
     }
 
     // At this point, we have a max-heap. Now, sort the array:
@@ -167,6 +166,7 @@ void heapSort(int *v, size_t n, long long &steps)
         // Rebuild the heap by sinking the new root element.
         // Note that the heap size is reduced by one in each iteration (so the element moved to the end stays there)
         sink(v, i, 0, steps);
+        steps++;
         // The process ends when the heap has only one element, which is the smallest and remains at the beginning of the array.
     }
 }
@@ -185,7 +185,10 @@ int main ()
         int* vRandom = new int [size];
         int* vRandomCopy = new int [size];
         int* vSorted = new int [size];
+        int* vSortedCopy = new int [size];
         int* vReverse = new int [size];
+        int* vReverseCopy = new int [size];
+
 
         if (!vRandom || !vSorted || !vReverse)
         {
@@ -203,8 +206,11 @@ int main ()
         
         copyArray(vRandom, vSorted, size);
         sort(vSorted, vSorted+size);
-        copyArray(vRandom, vReverse, size);
+        copyArray(vSorted, vSortedCopy, size);
+        copyArray(vSorted, vReverse, size);
         reverse(vReverse, vReverse+size);
+        copyArray(vReverse, vReverseCopy, size);
+
 
         for (int i = 0; i < sizeAverage; i++)
         {
@@ -231,11 +237,11 @@ int main ()
         cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsQuickSort) << std::flush;
 
         stepsHeapSort = 0;
-        heapSort(vSorted,size, stepsHeapSort);
+        heapSort(vSortedCopy,size, stepsHeapSort);
         cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsHeapSort) << std::flush;
 
         stepsQuickSort = 0;
-        middle_QuickSort(vReverse,0 ,size-1, stepsQuickSort);
+        middle_QuickSort(vReverseCopy,0 ,size-1, stepsQuickSort);
         cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsQuickSort) << std::flush;
 
         stepsHeapSort = 0;

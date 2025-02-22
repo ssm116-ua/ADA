@@ -3,46 +3,109 @@ set terminal png
 set output "quickSort.png"
 
 set xlabel "size of arrays"
-set ylabel "CPU time (ms)"
+set ylabel "Millions of program steps"
 
-set title  "Quick Sort: Empirical Analysis of Exact Time Complexity"
-set xtics("2¹⁵" 32768, "2¹⁶" 65536,"2¹⁷" 131072,"2¹⁸" 262144,"2¹⁹" 524288)
+set title  "Quicksort"
+set xtics("2¹⁶" 65536,"2¹⁷" 131072,"2¹⁸" 262144,"2¹⁹" 524288, "2²⁰" 1048576)
+#"2¹⁵" 32768, 
+plot "qs-vs-hs.Msteps" using 1:2 with lines title "random arrays", \
+"qs-vs-hs.Msteps" using 1:4 with lines title "sorted arrays", \
+"qs-vs-hs.Msteps" using 1:6 with lines title "reverse-sorted arrays"
 
-plot "quickSort.CPUtimes" using 1:2 with points title "CPU Times of sample"
+##########################################################################
+
+set terminal png
+set output "heapSort.png"
+
+set xlabel "size of arrays"
+set ylabel "Millions of program steps"
+
+set title  "Heapsort"
+set xtics("2¹⁶" 65536,"2¹⁷" 131072,"2¹⁸" 262144,"2¹⁹" 524288, "2²⁰" 1048576)
+#"2¹⁵" 32768, 
+plot "qs-vs-hs.Msteps" using 1:3 with lines title "random arrays", \
+"qs-vs-hs.Msteps" using 1:5 with lines title "sorted arrays", \
+"qs-vs-hs.Msteps" using 1:7 with lines title "reverse-sorted arrays"
+
+##########################################################################
+
+set terminal png
+set output "qs-vs-hs-RA.png"
+
+set xlabel "size of arrays"
+set ylabel "Millions of program steps"
+
+set title  "Quicksort versus HeapSort (random arrays)"
+set xtics("2¹⁶" 65536,"2¹⁷" 131072,"2¹⁸" 262144,"2¹⁹" 524288, "2²⁰" 1048576)
+
+quickSortFit(x) = (a*x*log(x) + b)
+heapSortFit(x) = (c*x*log(x) + d)
+
+#------------------------------------------------------------------------
+#Fit to a (n log n ) function: 
+fit quickSortFit(x) "qs-vs-hs.Msteps" using 1:2 via a,b
+fit heapSortFit(x) "qs-vs-hs.Msteps" using 1:3 via c,d
+#------------------------------------------------------------------------
+
+plot "qs-vs-hs.Msteps" using 1:2 with lines title "Quicksort", \
+"qs-vs-hs.Msteps" using 1:3 with lines title "Heapsort", \
+quickSortFit(x) title "fitting Quicksort time values to ...", \
+heapSortFit(x) title "fitting Quicksort time values to ..."
+
 
 
 ##########################################################################
-#Testing different analytical functions to determine which best fits:
 
-set output "quickSort_and_Fit-Function.png"
-set title "Quick Sort: Exact time complexity and Fit function"
+set terminal png
+set output "qs-vs-hs-SA.png"
 
+set xlabel "size of arrays"
+set ylabel "Millions of program steps"
+
+set title  "Quicksort versus HeapSort (sorted arrays)"
+set xtics("2¹⁶" 65536,"2¹⁷" 131072,"2¹⁸" 262144,"2¹⁹" 524288, "2²⁰" 1048576)
+
+quickSortFit(x) = (a*x*log(x) + b)
+heapSortFit(x) = (c*x*log(x) + d)
 
 #------------------------------------------------------------------------
-
-# Testing 3 different functions:
-#Uncomment the function to be tested and comment the rest:
-
-##Fit to a linear function: 
-#y(x)=a*x + b 
-#fitFunction="Fitting Quicksort time values to f(n) = n+k"
-#fit y(x) "quickSort.CPUtimes" using 1:2 via a,b
-
-
 #Fit to a (n log n ) function: 
-y(x)=a*x*log(x) + b #La que mejor se ajusta es la siguiente función.
-fitFunction="Fitting Quicksort time values to f(n) = n log(n)"
-fit y(x) "quickSort.CPUtimes" using 1:2 via a,b
-
-
-##Fit to a (n (log n) + n) function: 
-#y(x)=a*x*log(x)+ x*b + c
-#fitFunction="Fitting Quicksort time values to f(n) = n * log(n) + n"
-#fit y(x) "quickSort.CPUtimes" using 1:2 via a,b,c
-
+fit quickSortFit(x) "qs-vs-hs.Msteps" using 1:4 via a,b
+fit heapSortFit(x) "qs-vs-hs.Msteps" using 1:5 via c,d
 #------------------------------------------------------------------------
 
+plot "qs-vs-hs.Msteps" using 1:4 with lines title "Quicksort", \
+"qs-vs-hs.Msteps" using 1:5 with lines title "Heapsort", \
+quickSortFit(x) title "fitting Quicksort time values to ...", \
+heapSortFit(x) title "fitting Quicksort time values to ..."
 
-#Finally draw both functions (CPU times of sample and the one that best fits) on one graph
-plot "quickSort.CPUtimes" using 1:2 with points title "CPU times of sample", y(x) title fitFunction  
 
+
+##########################################################################
+
+set terminal png
+set output "qs-vs-hs-RSA.png"
+
+set xlabel "size of arrays"
+set ylabel "Millions of program steps"
+
+set title  "Quicksort versus HeapSort (reverse-sorted arrays)"
+set xtics("2¹⁶" 65536,"2¹⁷" 131072,"2¹⁸" 262144,"2¹⁹" 524288, "2²⁰" 1048576)
+
+quickSortFit(x) = (a*x*log(x) + b)
+heapSortFit(x) = (c*x*log(x) + d)
+
+#------------------------------------------------------------------------
+#Fit to a (n log n ) function: 
+fit quickSortFit(x) "qs-vs-hs.Msteps" using 1:6 via a,b
+fit heapSortFit(x) "qs-vs-hs.Msteps" using 1:7 via c,d
+#------------------------------------------------------------------------
+
+plot "qs-vs-hs.Msteps" using 1:6 with lines title "Quicksort", \
+"qs-vs-hs.Msteps" using 1:7 with lines title "Heapsort", \
+quickSortFit(x) title "fitting Quicksort time values to ...", \
+heapSortFit(x) title "fitting Quicksort time values to ..."
+
+
+
+##########################################################################
