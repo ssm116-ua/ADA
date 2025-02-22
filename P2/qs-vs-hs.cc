@@ -14,13 +14,26 @@ Practice 2: "Empirical analysis by means of program-steps account of two sorting
 
 using namespace std;
 
-const int sizeAverage = 30;
+const int sizeAverage = 30; // Número de iteraciones para calcular la media de los pasos
+const int million = 1e6; // Valor que se utiliza para convertir los pasos en millones
 
-void copyArray(int *v, int *w, size_t n)
+//--------------------------------------------------------------
+// copyArray:
+// Copia el contenido de un array en otro.
+// Parámetros:
+// - v: array origen
+// - w: array destino
+// - n: tamaño de los arrays
+//--------------------------------------------------------------
+void copyArray(int *v, int *w, size_t n) 
 {
     memcpy(w, v, n * sizeof(int));
 }
 
+//--------------------------------------------------------------
+// printTable:
+// Imprime el inicio de la tabla de resultados.
+//--------------------------------------------------------------
 void printTable()
 {
         cout << "# QUICKSORT VERSUS HEAPSORT."
@@ -29,7 +42,7 @@ void printTable()
         << endl
         << "# Number of samples (arrays of integer)"
         << endl
-        << "#" <<setw(11) << "RANDOM ARRAYS" <<setw(11) <<"SORTED ARRAYS"<<setw(11) <<"REVERSE SORTED ARRAYS"
+        << "#" <<setw(11) << "RANDOM ARRAYS" <<setw(11) <<"SORTED ARRAYS"<<setw(11) <<"REVERSE SORTED ARRAYS" 
         << endl
         << "#" << setw(11) <<"-------------------"<< setw(11) <<"-------------------" << setw(11) <<"-----------------------" << endl
         << "#" << setw(7) << "Size" 
@@ -39,7 +52,14 @@ void printTable()
         << "#===================================================================================="<< endl;
 }
 
-
+//--------------------------------------------------------------
+// stepsAverage:
+// Calcula la media de los pasos de un array.
+// Parámetros:
+// - array: array que almacena los pasos de cada iteración.
+// Devuelve:
+// - Media de los pasos.
+//--------------------------------------------------------------
 double stepsAverage (long long array[])
 {
     long long sum = 0;
@@ -50,6 +70,14 @@ double stepsAverage (long long array[])
     return sum / sizeAverage;
 }
 
+//--------------------------------------------------------------
+// stepsInMillions:
+// Convierte los pasos en millones.
+// Parámetros:
+// - steps: pasos a convertir.
+// Devuelve:
+// - Pasos en millones.
+//--------------------------------------------------------------
 double stepsInMillions (long long steps)
 {
     double stepsDouble = steps / 1e6;
@@ -171,13 +199,55 @@ void heapSort(int *v, size_t n, long long &steps)
     }
 }
 
+//--------------------------------------------------------------
+// quickSortLoop:
+// Realiza un bucle para calcular la media de los pasos de QuickSort.
+// Parámetros:
+// - vRandom: array de enteros aleatorios.
+// - vRandomCopy: copia del array de enteros aleatorios.
+// - vStepsAverageQuick: array que almacena los pasos de cada iteración.
+// - size: tamaño de los arrays.
+// - stepsQuickSort: pasos de QuickSort.
+//--------------------------------------------------------------
+void quickSortLoop(int *vRandom, int *vRandomCopy, long long *vStepsAverageQuick, size_t size,long long &stepsQuickSort)
+{
+    for (int i = 0; i < sizeAverage; i++)
+    {
+        stepsQuickSort = 0;
+        copyArray(vRandom, vRandomCopy, size);
+        middle_QuickSort(vRandomCopy,0 ,size-1, stepsQuickSort);
+        vStepsAverageQuick[i] = stepsQuickSort;
+    }
+}
+
+//--------------------------------------------------------------
+// heapSortLoop:
+// Realiza un bucle para calcular la media de los pasos de HeapSort.
+// Parámetros:
+// - vRandom: array de enteros aleatorios.
+// - vRandomCopy: copia del array de enteros aleatorios.
+// - vStepsAverageHeap: array que almacena los pasos de cada iteración.
+// - size: tamaño de los arrays.
+// - stepsHeapSort: pasos de HeapSort.
+//--------------------------------------------------------------
+void heapSortLoop(int *vRandom, int *vRandomCopy, long long *vStepsAverageHeap, size_t size,long long &stepsHeapSort)
+{
+    for (int i = 0; i < sizeAverage; i++)
+    {
+        stepsHeapSort= 0;
+        copyArray(vRandom, vRandomCopy, size);
+        heapSort(vRandomCopy,size, stepsHeapSort);
+        vStepsAverageHeap[i] = stepsHeapSort;
+    }
+}
 
 int main ()
 {
-    srand(0);
+    srand(0); // Semilla para la generación de números aleatorios.
     printTable();
-    for(int exp = 15; exp <= 20; exp++)
+    for(int exp = 15; exp <= 20; exp++) // Bucle para recorrer los tamaños de los arrays.
     {
+        // Declaración de variables.
         long long stepsQuickSort = 0, stepsHeapSort = 0;
         size_t size = size_t( pow(2,exp) );
         long long* vStepsAverageQuick = new long long [sizeAverage];
@@ -190,20 +260,20 @@ int main ()
         int* vReverseCopy = new int [size];
 
 
-        if (!vRandom || !vSorted || !vReverse)
+        if (!vRandom || !vSorted || !vReverse) // Si no se ha podido reservar memoria, se muestra un mensaje de error.
         {
             cerr << "Error, not enough memory!" << endl;
             exit (EXIT_FAILURE);  
         }
 
-        cout << setw(9) <<size<< std::flush; 
+        cout << setw(9) <<size<< std::flush; // Imprime el tamaño del array para cada iteración.
 
-        for (size_t j = 0; j < size; j++)
+        for (size_t j = 0; j < size; j++) // Bucle para rellenar los arrays con números aleatorios.
         {
             vRandom[j] = rand();
         } 
 
-        
+        // Se copian los arrays de enteros aleatorios, ordenados y ordenados al revés.
         copyArray(vRandom, vSorted, size);
         sort(vSorted, vSorted+size);
         copyArray(vSorted, vSortedCopy, size);
@@ -211,25 +281,11 @@ int main ()
         reverse(vReverse, vReverse+size);
         copyArray(vReverse, vReverseCopy, size);
 
-
-        for (int i = 0; i < sizeAverage; i++)
-        {
-            stepsQuickSort = 0;
-            copyArray(vRandom, vRandomCopy, size);
-            middle_QuickSort(vRandomCopy,0 ,size-1, stepsQuickSort);
-            vStepsAverageQuick[i] = stepsQuickSort;
-        }
-
-        cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsAverage(vStepsAverageQuick));
+       
+        quickSortLoop(vRandom, vRandomCopy, vStepsAverageQuick, size, stepsQuickSort);
+        cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsAverage(vStepsAverageQuick))<<std::flush;
         
-        for (int i = 0; i < sizeAverage; i++)
-        {
-            stepsHeapSort= 0;
-            copyArray(vRandom, vRandomCopy, size);
-            heapSort(vRandomCopy,size, stepsHeapSort);
-            vStepsAverageHeap[i] = stepsHeapSort;
-        }
-        
+        heapSortLoop(vRandom, vRandomCopy, vStepsAverageHeap, size, stepsHeapSort);
         cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsAverage(vStepsAverageHeap)) <<std::flush;
 
         stepsQuickSort = 0;
@@ -248,7 +304,9 @@ int main ()
         heapSort(vReverse,size, stepsHeapSort);
         cout<< fixed << setprecision(3) << setw(11) <<stepsInMillions(stepsHeapSort)<< endl << std::flush;
 
-
+        // Liberación de memoria.
+        delete[] vStepsAverageQuick;
+        delete[] vStepsAverageHeap;
         delete[] vRandom;
         delete[] vRandomCopy;
         delete[] vSorted;
