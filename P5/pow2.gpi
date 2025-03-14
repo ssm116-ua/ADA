@@ -3,14 +3,13 @@ set terminal png
 set output "pow2.png"
 
 set xlabel "n Value"
-set ylabel "Steps"
+set ylabel "Steps (pow2_2)"
+set y2label "Steps (pow2_1, pow2_3)"
+set title  "Pow 2 (Doble eje Y)"
 
-set title  "Pow 2"
+set ytics ( "2¹⁵" 32768, "2¹⁶" 65536, "2¹⁷" 131072, "2¹⁸" 262144, "2¹⁹" 524288, "2²⁰" 1048576) nomirror
+set y2tics  # Activa el segundo eje Y
 
-set ytics ( "2¹⁵" 32768, "2¹⁶" 65536, "2¹⁷" 131072, "2¹⁸" 262144, "2¹⁹" 524288, "2²⁰" 1048576)
-
-plot "pow2.steps" using 1:2 with lines title "pow2_1", \
-"pow2.steps" using 1:3 with lines title "pow2_2", \
-"pow2.steps" using 1:4 with lines title "pow2_3"
-
-##########################################################################
+plot "pow2.steps" using 1:2 with lines linewidth 2 title "pow2_1" axes x1y2, \
+     "pow2.steps" using 1:3 with lines linewidth 2 title "pow2_2", \
+     "pow2.steps" using 1:4 with lines linewidth 2 title "pow2_3" axes x1y2,
