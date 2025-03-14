@@ -1,0 +1,16 @@
+# Salvador Pardo Saiz 51253936-T
+set terminal png
+set output "pow2.png"
+
+set xlabel "n Value"
+set ylabel "Steps"
+
+set title  "Pow 2"
+
+set ytics ( "2¹⁵" 32768, "2¹⁶" 65536, "2¹⁷" 131072, "2¹⁸" 262144, "2¹⁹" 524288, "2²⁰" 1048576)
+
+plot "pow2.steps" using 1:2 with lines title "pow2_1", \
+"pow2.steps" using 1:3 with lines title "pow2_2", \
+"pow2.steps" using 1:4 with lines title "pow2_3"
+
+##########################################################################
