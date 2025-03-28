@@ -97,6 +97,121 @@ bool parameterF(string fileName, int &filas, int &columnas)
     return result;
 }
 
+void parameterP2D(int filas, int columnas, vector<vector<int>> matriz, vector<vector<int>> sol)
+{
+        int i = filas - 1;
+        int j = columnas - 1;
+        vector<vector<char>> imprimir(filas, vector<char>(columnas, '0'));
+
+        for (int i = 0; i < filas; i++)
+        {
+            for (int j = 0; j < columnas; j++)
+            {
+                if (matriz[i][j] == 0)
+                {
+                    imprimir[i][j] = '0';
+                }
+                else
+                {
+                    imprimir[i][j] = '1';
+                }
+            }
+        }
+
+        while (i > 0 || j > 0)
+        {
+            imprimir[i][j] = '*'; // Marcar el camino más corto con '*'
+
+            // Determinar la dirección del siguiente paso
+            if (i > 0 && j > 0 && sol[i][j] == sol[i - 1][j - 1] + 1)
+            {
+                i--; // Diagonal arriba-izquierda
+                j--;
+            }
+            else if (i > 0 && sol[i][j] == sol[i - 1][j] + 1)
+            {
+                i--; // Arriba
+            }
+            else if (j > 0 && sol[i][j] == sol[i][j - 1] + 1)
+            {
+                j--; // Izquierda
+            }
+        }
+        imprimir[0][0] = '*'; // Marcar la posición inicial
+
+
+        for (int i = 0; i < filas; i++)
+        {
+            for (int j = 0; j < columnas; j++)
+            {
+                cout << imprimir[i][j];
+            }
+            cout << endl;
+        }
+}
+
+void parameterT(int filas, int columnas, vector<vector<int>> matriz, vector<vector<int>> sol)
+{
+    // Crear la matriz imprimir basada en sol
+    vector<vector<char>> imprimir(filas, vector<char>(columnas, '-')); // Inicializar con '-'
+    vector<vector<bool>> es_camino(filas, vector<bool>(columnas, false)); // Marcar las celdas del camino más corto
+
+    // Rastrear el camino más corto desde la posición final hasta la inicial
+    int i = filas - 1;
+    int j = columnas - 1;
+
+    while (i >= 0 && j >= 0)
+    {
+        // Marcar la celda como parte del camino más corto
+        es_camino[i][j] = true;
+
+        // Determinar la dirección del siguiente paso en el camino más corto
+        if (i > 0 && j > 0 && sol[i][j] == sol[i - 1][j - 1] + 1)
+        {
+            i--; // Diagonal arriba-izquierda
+            j--;
+        }
+        else if (i > 0 && sol[i][j] == sol[i - 1][j] + 1)
+        {
+            i--; // Arriba
+        }
+        else if (j > 0 && sol[i][j] == sol[i][j - 1] + 1)
+        {
+            j--; // Izquierda
+        }
+        else
+        {
+            break; // Salir si no hay más pasos válidos
+        }
+    }
+
+    // Actualizar la matriz imprimir
+    for (int i = 0; i < filas; i++)
+    {
+        for (int j = 0; j < columnas; j++)
+        {
+            if (es_camino[i][j])
+            {
+                imprimir[i][j] = sol[i][j] + '0'; // Convertir el valor numérico a carácter
+            }
+            else if (sol[i][j] != -1 && sol[i][j] != NO_EXIST)
+            {
+                imprimir[i][j] = 'X'; // Marcar como alcanzada exclusivamente
+            }
+        }
+    }
+
+    // Imprimir la matriz
+    cout << "Memoization table:" << endl;
+    for (int i = 0; i < filas; i++)
+    {
+        for (int j = 0; j < columnas; j++)
+        {
+            cout << imprimir[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
 
 void getMatrix(string fileName, int filas, int columnas, vector<vector<int>>&matrix)
 {
@@ -144,6 +259,8 @@ int maize_memo(int pos_fila, int pos_col, vector<vector<int>> matrix, vector<vec
         return NO_EXIST;
     }
 
+
+
     if(sol[pos_fila][pos_col] != -1)
     {
         return sol[pos_fila][pos_col];
@@ -153,9 +270,18 @@ int maize_memo(int pos_fila, int pos_col, vector<vector<int>> matrix, vector<vec
     {
         return sol[pos_fila][pos_col] = 1;
     }
+    int diagonal = maize_memo(pos_fila-1, pos_col-1, matrix, sol);
+    int arriba = maize_memo(pos_fila-1, pos_col, matrix, sol);
+    int izquierda = maize_memo(pos_fila, pos_col-1, matrix, sol);
 
-    return sol[pos_fila][pos_col] = 1 + min(maize_memo(pos_fila-1, pos_col-1, matrix, sol), maize_memo(pos_fila-1, pos_col, matrix, sol), maize_memo(pos_fila, pos_col-1, matrix, sol));
-;
+    if (diagonal == NO_EXIST && arriba == NO_EXIST && izquierda == NO_EXIST)
+    {
+        sol[pos_fila][pos_col] = NO_EXIST;
+        return NO_EXIST;
+    }
+    
+
+    return sol[pos_fila][pos_col] = 1 + min(diagonal, arriba, izquierda);
 
 }
 
@@ -208,56 +334,12 @@ int main(int argc, char *argv[])
     
     if(paramP2D)
     {
-        int i = filas - 1;
-        int j = columnas - 1;
-        vector<vector<char>> imprimir(filas, vector<char>(columnas, 0));
+        parameterP2D(filas, columnas, matriz, sol);
+    }
 
-        for (int i = 0; i < filas; i++)
-        {
-            for (int j = 0; j < columnas; j++)
-            {
-                if (matriz[i][j] == 0)
-                {
-                    imprimir[i][j] = '0';
-                }
-                else
-                {
-                    imprimir[i][j] = '1';
-                }
-            }
-        }
-
-        while (i > 0 || j > 0)
-        {
-            imprimir[i][j] = '*'; // Marcar el camino más corto con '*'
-
-            // Determinar la dirección del siguiente paso
-            if (i > 0 && j > 0 && sol[i][j] == sol[i - 1][j - 1] + 1)
-            {
-                i--; // Diagonal arriba-izquierda
-                j--;
-            }
-            else if (i > 0 && sol[i][j] == sol[i - 1][j] + 1)
-            {
-                i--; // Arriba
-            }
-            else if (j > 0 && sol[i][j] == sol[i][j - 1] + 1)
-            {
-                j--; // Izquierda
-            }
-        }
-    imprimir[0][0] = '*'; // Marcar la posición inicial
-
-
-        for (int i = 0; i < filas; i++)
-        {
-            for (int j = 0; j < columnas; j++)
-            {
-                cout << imprimir[i][j] << " ";
-            }
-            cout << endl;
-        }
-        
+    if(paramT)
+    {   
+        parameterT(filas, columnas, matriz, sol);
     }
     return 0;
 }
