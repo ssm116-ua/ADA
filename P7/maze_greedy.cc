@@ -13,15 +13,15 @@ using namespace std;
 /**
  * @brief Función que imprime la matriz.
  * 
- * @param filas Número de filas.
- * @param columnas Número de columnas.
- * @param matrix Matriz a imprimir.
+ * @param rows Número de filas.
+ * @param columns Número de columnas.
+ * @param matrix Matriz a printMatrix.
  */
-void printMatrixString(int filas, int columnas, vector<vector<string>> matrix)
+void printMatrixString(int rows, int columns, vector<vector<string>> matrix)
 {
-    for (int i = 0; i < filas; i++)
+    for (int i = 0; i < rows; i++)
     {
-        for (int j = 0; j < columnas; j++)
+        for (int j = 0; j < columns; j++)
         {
             cout << matrix[i][j];
         }
@@ -68,22 +68,22 @@ bool checkParameters(int argc, char *argv[], bool &paramF, bool &paramP2D, strin
     }
     if(!paramF)
     {
-        cerr << "Falta el parámetro -f" <<endl;
+        cerr << "ERROR: parameter -f is missing" <<endl;
         return false;
     }
     return true;
 }
 
 /**
- * @brief Función que lee el archivo y obtiene el número de filas y columnas.
+ * @brief Función que lee el archivo y obtiene el número de rows y columns.
  * 
  * @param fileName Nombre del archivo.
- * @param filas Número de filas.
- * @param columnas Número de columnas.
+ * @param rows Número de filas.
+ * @param columns Número de columnas.
  * @return true Si se pudo leer el archivo correctamente.
  * @return false Si hubo un error al abrir el archivo.
  */
-bool parameterF(string fileName, int &filas, int &columnas)
+bool parameterF(string fileName, int &rows, int &columns)
 {
     bool result = true;
     ifstream file;
@@ -93,7 +93,7 @@ bool parameterF(string fileName, int &filas, int &columnas)
         string line;
         getline(file, line);
         stringstream ss(line);
-        ss >> filas >> columnas;
+        ss >> rows >> columns;
         
     }
     else
@@ -108,64 +108,64 @@ bool parameterF(string fileName, int &filas, int &columnas)
 /**
  * @brief Función que imprime el laberinto con el camino más corto teniendo el caracter '*'.
  * 
- * @param filas Número de filas.
- * @param columnas Número de columnas.
- * @param matriz Matriz del laberinto.
- * @param almacen Matriz de almacenamiento.
+ * @param rows Número de filas.
+ * @param columns Número de columnas.
+ * @param matrix Matriz del laberinto.
+ * @param storage Matriz de almacenamiento.
  */
-void maze_parser(int filas, int columnas, vector<vector<int>> matriz, vector<vector<int>> almacen)
+void maze_parser(int rows, int columns, vector<vector<int>> matrix, vector<vector<int>> storage)
 {
-        if(filas == 1 && columnas == 1 && matriz[0][0] == 1)
+        if(rows == 1 && columns == 1 && matrix[0][0] == 1)
         {
             cout<< "*"<<endl;
             return;
         }
-        else if (filas == 1 && columnas == 1 && matriz[0][0] == 0)
+        else if (rows == 1 && columns == 1 && matrix[0][0] == 0)
         {
             cout<< "0"<<endl;
             return;
         }
 
-        vector<vector<string>> imprimir(filas, vector<string>(columnas, ""));
+        vector<vector<string>> printMatrix(rows, vector<string>(columns, ""));
 
-        for (int i = 0; i < filas; i++)
+        for (int i = 0; i < rows; i++)
         {
-            for (int j = 0; j < columnas; j++)
+            for (int j = 0; j < columns; j++)
             {
-                if (matriz[i][j] == 0)
+                if (matrix[i][j] == 0)
                 {
-                    imprimir[i][j] = "0";
+                    printMatrix[i][j] = "0";
                 }
                 else
                 {
-                    imprimir[i][j] = "1";
+                    printMatrix[i][j] = "1";
                 }
             }
         }
 
-        for(int i = 0; i < filas; i++)
+        for(int i = 0; i < rows; i++)
         {
-            for(int j = 0; j < columnas; j++)
+            for(int j = 0; j < columns; j++)
             {
-                if(almacen[i][j] != 0)
+                if(storage[i][j] != 0)
                 {
-                    imprimir[i][j] = "*";
+                    printMatrix[i][j] = "*";
                 }
             }
         }
 
-        printMatrixString(filas, columnas, imprimir);
+        printMatrixString(rows, columns, printMatrix);
 }
 
 /**
  * @brief Función que lee el archivo y obtiene la matriz.
  * 
  * @param fileName Nombre del archivo.
- * @param filas Número de filas.
- * @param columnas Número de columnas.
+ * @param rows Número de rows.
+ * @param columns Número de columns.
  * @param matrix Matriz a llenar.
  */
-void getMatrix(string fileName, int filas, int columnas, vector<vector<int>>&matrix)
+void getMatrix(string fileName, int rows, int columns, vector<vector<int>>&matrix)
 {
     ifstream file;
     file.open(fileName,ios::in);
@@ -174,11 +174,11 @@ void getMatrix(string fileName, int filas, int columnas, vector<vector<int>>&mat
         string line;
         getline(file, line);
 
-        for (int i = 0; i < filas; i++)
+        for (int i = 0; i < rows; i++)
         {
             getline(file, line);
             stringstream ss(line); // Crear un stringstream para procesar la línea
-            for (int j = 0; j < columnas; j++)
+            for (int j = 0; j < columns; j++)
             {
                 ss >> matrix[i][j]; // Extraer cada valor entero
             }
@@ -234,6 +234,11 @@ int maze_greedy(int rows, int columns, vector<vector<int>> matrix, vector<vector
             break;
         }
     }
+    if(path != 0)
+    {
+        matrixGreedy[rows-1][columns-1] = path;
+    }
+
     return path;
 }
 
@@ -254,32 +259,32 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int filas, columnas;
+    int rows, columns;
     if(paramF)
     {
-        if(!parameterF(fileName, filas, columnas))
+        if(!parameterF(fileName, rows, columns))
         {
             return 1;
         }
     }
 
-    vector<vector<int>> matriz(filas, vector<int>(columnas, 0));
-    getMatrix(fileName, filas, columnas, matriz);
+    vector<vector<int>> matrix(rows, vector<int>(columns, 0));
+    getMatrix(fileName, rows, columns, matrix);
 
-    vector<vector<int>> matrizGreedy_almacen(filas, vector<int>(columnas, 0)); 
-    int valor = maze_greedy(filas, columnas, matriz, matrizGreedy_almacen);
+    vector<vector<int>> matrizGreedy_storage(rows, vector<int>(columns, 0)); 
+    int valor = maze_greedy(rows, columns, matrix, matrizGreedy_storage);
     cout<< valor <<endl;
-        
+         
 
     if(paramP2D)
     {
-        if(matriz[0][0] == 0 && filas == 1 && columnas == 1)
+        if(matrix[0][0] == 0 && rows == 1 && columns == 1)
         {
             cout<<"0"<<endl;
         }
         else
         {
-            maze_parser(filas, columnas, matriz, matrizGreedy_almacen);
+            maze_parser(rows, columns, matrix, matrizGreedy_storage);
         }
     }
 
