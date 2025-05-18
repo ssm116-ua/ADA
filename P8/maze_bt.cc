@@ -29,7 +29,7 @@ enum Step { N, NE, E, SE, S, SW, W, NW };
  * @return true Si los parámetros son válidos.
  * @return false Si los parámetros son incorrectos.
  */
-bool checkParameters(int argc, char *argv[], bool &paramF, bool &paramP2D, string &fileName)
+bool checkParameters(int argc, char *argv[], bool &paramF, bool &paramP2D, bool &paramP, string &fileName)
 {
     for (int i = 1; i < argc; i++)
     {
@@ -47,6 +47,10 @@ bool checkParameters(int argc, char *argv[], bool &paramF, bool &paramP2D, strin
         else if(strcmp(argv[i],"--p2D") == 0)
         {
             paramP2D = true;
+        }
+        else if(strcmp(argv[i],"-p") == 0)
+        {
+            paramP = true;
         }
         else
         {
@@ -97,11 +101,72 @@ string parameterP(int rows, int columns, vector<vector<int>> matrix_storage)
 {
     string path = "<";
 
+    // Mapear las direcciones a sus valores numéricos
+    map<pair<int, int>, int> direction_map = {
+        {{-1, 0}, 1},  // N
+        {{-1, 1}, 2},  // NE
+        {{0, 1}, 3},   // E
+        {{1, 1}, 4},   // SE
+        {{1, 0}, 5},   // S
+        {{1, -1}, 6},  // SW
+        {{0, -1}, 7},  // W
+        {{-1, -1}, 8}  // NW
+    };
+
+    // Encontrar la celda inicial del camino (primer '1' en la matriz)
+    pair<int, int> current = {-1, -1};
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < columns; j++)
         {
-            
+            if (matrix_storage[i][j] == 1)
+            {
+                current = {i, j};
+                break;
+            }
+        }
+        if (current.first != -1) break;
+    }
+
+    // Si no se encuentra un camino, devolver "<>"
+    if (current.first == -1)
+    {
+        return "<>";
+    }
+
+    // Crear una copia de la matriz para marcar las celdas visitadas
+    vector<vector<int>> visited(rows, vector<int>(columns, 0));
+    visited[current.first][current.second] = 1;
+
+    // Seguir el camino mínimo desde la celda inicial
+    while (true)
+    {
+        bool found_next = false;
+
+        // Buscar la siguiente celda en el camino
+        for (auto it = direction_map.begin(); it != direction_map.end(); ++it)
+        {
+            pair<int, int> direction = it->first;
+            int value = it->second;
+
+            int next_row = current.first + direction.first;
+            int next_col = current.second + direction.second;
+
+            if (next_row >= 0 && next_row < rows && next_col >= 0 && next_col < columns &&
+                matrix_storage[next_row][next_col] == 1 && visited[next_row][next_col] == 0)
+            {
+                path += to_string(value); // Agregar la dirección al camino
+                current = {next_row, next_col};
+                visited[next_row][next_col] = 1; // Marcar como visitada
+                found_next = true;
+                break;
+            }
+        }
+
+        // Si no se encuentra una siguiente celda, terminar el recorrido
+        if (!found_next)
+        {
+            break;
         }
     }
 
@@ -289,73 +354,96 @@ int maze_naive(int pos_fila, int pos_col, vector<vector<int>> matrix)
 /**
  * 
  */
-int maze_bt(int rows, int columns, int pos_row, int pos_column,int bestLength,vector<vector<int>> matrix, 
-    vector<vector<int>> &storage, vector<vector<int>> &tempStorage, vector<vector<int>> &visitedPaths, long long int &visitedNodes, 
-    long long int &exploratedNodes, long long int &leafNodes, long long int &discardedNodes, 
-    long long int &discardedPromisingNodes)
+int maze_bt(int rows, int columns, int pos_row, int pos_column, int &prev_row, int &prev_column, int &bestLength, 
+    vector<vector<int>> matrix, vector<vector<int>> &storage, vector<vector<int>> &visitedPaths, 
+    long long int &visitedNodes, long long int &exploratedNodes, long long int &leafNodes, 
+    long long int &discardedNodes, long long int &discardedPromisingNodes)
 {
-    map<Step,tuple<int,int>> steps_inc;
-	steps_inc[N]=make_tuple(-1,0);
-	steps_inc[NE]=make_tuple(-1,1);
-	steps_inc[E]=make_tuple(0,1);
-	steps_inc[SE]=make_tuple(1,1);
-	steps_inc[S]=make_tuple(1,0);
-	steps_inc[SW]=make_tuple(1,-1);
-	steps_inc[W]=make_tuple(0,-1);
-	steps_inc[NW]=make_tuple(-1,-1);
+    map<Step, tuple<int, int>> steps_inc;
+    steps_inc[N] = make_tuple(-1, 0);
+    steps_inc[NE] = make_tuple(-1, 1);
+    steps_inc[E] = make_tuple(0, 1);
+    steps_inc[SE] = make_tuple(1, 1);
+    steps_inc[S] = make_tuple(1, 0);
+    steps_inc[SW] = make_tuple(1, -1);
+    steps_inc[W] = make_tuple(0, -1);
+    steps_inc[NW] = make_tuple(-1, -1);
 
     visitedNodes++;
 
-    if(pos_row < 0 || pos_row >= rows || pos_column < 0 || pos_column >= columns ||
-        matrix[pos_row][pos_column] == 0 || visitedPaths[pos_row][pos_column] == 1)
+    // Caso base: fuera de los límites o celda bloqueada
+    if (pos_row < 0 || pos_row >= rows || pos_column < 0 || pos_column >= columns ||
+        matrix[pos_row][pos_column] == 0)
     {
         discardedNodes++;
         leafNodes++;
         return NO_EXIST;
     }
-
-    if(pos_row == rows - 1 && pos_column == columns - 1)
+    // Caso base: celda final
+    if (pos_row == rows - 1 && pos_column == columns - 1)
     {
         leafNodes++;
-        tempStorage[pos_row][pos_column] = 1;
+        storage[pos_row][pos_column] = 1; // Marcar el destino en el camino más corto
         return 1;
     }
 
-    visitedPaths[pos_row][pos_column] = 1;
-    tempStorage[pos_row][pos_column] = 1;
 
-    int bestResult = NO_EXIST;
-
+    // Caso Recursivo: explorar las 8 direcciones posibles
+    int localBestLength = NO_EXIST;
     for (auto it = steps_inc.begin(); it != steps_inc.end(); ++it)
     {
         int incx, incy;
         tie(incx, incy) = it->second;
         int newRow = pos_row + incx;
         int newCol = pos_column + incy;
-        if(newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns)
-        {
-            exploratedNodes++;
-            int result = maze_bt(rows, columns, newRow, newCol, bestLength, matrix, storage, 
-                tempStorage, visitedPaths, visitedNodes, exploratedNodes, leafNodes, discardedNodes, 
-                discardedPromisingNodes);
 
-            if(result != NO_EXIST)
+        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns)
+        {
+            // Solo explorar si la nueva casilla no tiene un valor menor ya almacenado
+            if (matrix[newRow][newCol] == 1 && 
+                (visitedPaths[newRow][newCol] == 0 || visitedPaths[newRow][newCol] > visitedPaths[pos_row][pos_column] + 1))
             {
-                if(bestLength > result + 1)
+                exploratedNodes++;
+        
+                // Actualizar el valor de la nueva casilla en visitedPaths
+                if(visitedPaths[pos_row][pos_column] != NO_EXIST)
                 {
-                    bestLength = result + 1;
+                    visitedPaths[newRow][newCol] = visitedPaths[pos_row][pos_column] + 1;
                 }
-                storage[pos_row][pos_column] = 1;
+                
+                int result = maze_bt(rows, columns, newRow, newCol, prev_row, prev_column, 
+                    bestLength, matrix, storage, visitedPaths, visitedNodes, exploratedNodes, 
+                    leafNodes, discardedNodes, discardedPromisingNodes);
+        
+                // Restaurar el valor de visitedPaths si el camino no es válido
+                if (result == NO_EXIST)
+                {
+                    visitedPaths[newRow][newCol] = 0; // Restaurar para permitir otras rutas
+                    discardedPromisingNodes++; // Se intentó un camino que no fue válido
+                }
+                else
+                {
+                    // Solo considerar resultados válidos (diferentes de NO_EXIST)
+                    if (result + 1 < localBestLength)
+                    {
+                        localBestLength = result + 1;
+                    }
+                }
             }
         }
-        else
-        {
-            discardedPromisingNodes++;
-        }
     }
-    visitedPaths[pos_row][pos_column] = 0;
-    
-    return bestLength;
+
+    // Si no se encontró un camino mejor, marcar la celda como no parte del camino óptimo
+    if (localBestLength < bestLength)
+    {
+        storage[pos_row][pos_column] = 1; // Solo marcar si es parte del camino más corto
+    }
+    else
+    {
+        storage[pos_row][pos_column] = 0; // Asegurarse de no marcar caminos no óptimos
+    }
+
+    return localBestLength == NO_EXIST ? NO_EXIST : localBestLength;
 }
 
 /**
@@ -370,7 +458,7 @@ int main(int argc, char *argv[])
     bool paramF = false, paramP2D = false, paramP = false;
     string fileName = "";
 
-    if(!checkParameters(argc, argv, paramF, paramP2D, fileName))
+    if(!checkParameters(argc, argv, paramF, paramP2D, paramP,fileName))
     {
         return 1;
     }
@@ -385,14 +473,14 @@ int main(int argc, char *argv[])
     }
 
     double time = 0;
-    int bestLength = NO_EXIST, pos_row = 0, pos_column = 0;
-    long long int visitedNodes = 0, exploratedNodes = 0, leafNodes = 0, discardedNodes = 0, discardedPromisingNodes;
+    int bestLength = NO_EXIST, pos_row = 0, pos_column = 0, prev_row = 0, prev_column = 0;
+    long long int visitedNodes = 0, exploratedNodes = 0, leafNodes = 0, discardedNodes = 0, discardedPromisingNodes = 0;
     vector<vector<int>> matrix(rows, vector<int>(columns, 0));
     getMatrix(fileName, rows, columns, matrix);
 
     vector<vector<int>> matrix_storage(rows, vector<int>(columns, 0));
-    vector<vector<int>> temp_storage(rows, vector<int>(columns, 0));
-    vector<vector<int>> matrix_paths(rows, vector<int>(columns, 0)); 
+    vector<vector<int>> matrix_paths(rows, vector<int>(columns, NO_EXIST));
+    
  
 
     auto start = steady_clock::now();
@@ -400,9 +488,9 @@ int main(int argc, char *argv[])
     bestLength = maze_naive(rows-1, columns-1, matrix);
     
 
-    int valor = maze_bt(rows, columns, pos_row, pos_column, bestLength, 
-        matrix, matrix_storage, temp_storage, matrix_paths, visitedNodes, exploratedNodes, 
-        leafNodes, discardedNodes, discardedPromisingNodes);
+    int valor = maze_bt(rows, columns, pos_row, pos_column, prev_row, prev_column,
+        bestLength, matrix, matrix_storage, matrix_paths, visitedNodes, 
+        exploratedNodes, leafNodes, discardedNodes, discardedPromisingNodes);
     
     auto end = steady_clock::now();
 
@@ -420,7 +508,7 @@ int main(int argc, char *argv[])
 
     if(paramP2D)
     {
-        if(matrix[0][0] == 0 && rows == 1 && columns == 1)
+        if((matrix[0][0] == 0 && rows == 1 && columns == 1) || valor == 0)
         {
             cout<<"0"<<endl;
         }
@@ -432,23 +520,14 @@ int main(int argc, char *argv[])
 
     if(paramP)
     {
-        if(matrix[0][0] == 0 && rows == 1 && columns == 1)
+        if((matrix[0][0] == 0 && rows == 1 && columns == 1) || valor == 0)
         {
             cout<<"<0>"<<endl;
         }
         else
         {
-            parameterP(rows, columns, matrix_storage);
+            cout << parameterP(rows, columns, matrix_storage);
         }
-    }
-
-    for(int i = 0; i < rows; i++)
-    {
-        for (int j = 0; j < columns; j++)
-        {
-           cout << matrix_storage[i][j] << " ";
-        }
-        cout << endl;
     }
     
     return 0;
