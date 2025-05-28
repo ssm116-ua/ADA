@@ -354,8 +354,9 @@ int maze_naive(int pos_fila, int pos_col, vector<vector<int>> matrix)
 /**
  * 
  */
+// incluir un vector que almacene el camino que es el it->first 
 int maze_bt(int rows, int columns, int pos_row, int pos_column, int &prev_row, int &prev_column, int &bestLength, 
-    vector<vector<int>> matrix, vector<vector<int>> &storage, vector<vector<int>> &visitedPaths, 
+    const vector<vector<int>> &matrix, vector<vector<int>> &storage, vector<vector<int>> &visitedPaths, 
     long long int &visitedNodes, long long int &exploratedNodes, long long int &leafNodes, 
     long long int &discardedNodes, long long int &discardedPromisingNodes)
 {
@@ -371,6 +372,19 @@ int maze_bt(int rows, int columns, int pos_row, int pos_column, int &prev_row, i
 
     visitedNodes++;
 
+    // Con esto se evita todo lo que conllevaba la recursión
+    if (pos_row == rows - 1 && pos_column == columns - 1)
+    {
+        if(length < bestLength)
+        {
+            bestLength = length;
+        }
+        leafNodes++;
+        storage[pos_row][pos_column] = 1; // Marcar el destino en el camino más corto
+        return 1;
+    }
+  
+
     // Caso base: fuera de los límites o celda bloqueada
     if (pos_row < 0 || pos_row >= rows || pos_column < 0 || pos_column >= columns ||
         matrix[pos_row][pos_column] == 0)
@@ -380,16 +394,11 @@ int maze_bt(int rows, int columns, int pos_row, int pos_column, int &prev_row, i
         return NO_EXIST;
     }
     // Caso base: celda final
-    if (pos_row == rows - 1 && pos_column == columns - 1)
-    {
-        leafNodes++;
-        storage[pos_row][pos_column] = 1; // Marcar el destino en el camino más corto
-        return 1;
-    }
+   
 
 
     // Caso Recursivo: explorar las 8 direcciones posibles
-    int localBestLength = NO_EXIST;
+
     for (auto it = steps_inc.begin(); it != steps_inc.end(); ++it)
     {
         int incx, incy;
@@ -397,53 +406,36 @@ int maze_bt(int rows, int columns, int pos_row, int pos_column, int &prev_row, i
         int newRow = pos_row + incx;
         int newCol = pos_column + incy;
 
+
+
         if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns)
         {
             // Solo explorar si la nueva casilla no tiene un valor menor ya almacenado
-            if (matrix[newRow][newCol] == 1 && 
-                (visitedPaths[newRow][newCol] == 0 || visitedPaths[newRow][newCol] > visitedPaths[pos_row][pos_column] + 1))
+            if (matrix[newRow][newCol] == 1 &&                                               //visitedPaths es length + 1    
+                (visitedPaths[newRow][newCol] == NO_EXIST || visitedPaths[newRow][newCol] < visitedPaths[pos_row][pos_column] + 1))
             {
                 exploratedNodes++;
         
                 // Actualizar el valor de la nueva casilla en visitedPaths
                 if(visitedPaths[pos_row][pos_column] != NO_EXIST)
                 {
-                    visitedPaths[newRow][newCol] = visitedPaths[pos_row][pos_column] + 1;
+                    visitedPaths[newRow][newCol] = length + 1;
                 }
+
+                // Anadir cota optimista el mayor de filas y columnas + el camino
                 
+                camino.push_back(it->first);
                 int result = maze_bt(rows, columns, newRow, newCol, prev_row, prev_column, 
                     bestLength, matrix, storage, visitedPaths, visitedNodes, exploratedNodes, 
                     leafNodes, discardedNodes, discardedPromisingNodes);
-        
-                // Restaurar el valor de visitedPaths si el camino no es válido
-                if (result == NO_EXIST)
-                {
-                    visitedPaths[newRow][newCol] = 0; // Restaurar para permitir otras rutas
-                    discardedPromisingNodes++; // Se intentó un camino que no fue válido
-                }
-                else
-                {
-                    // Solo considerar resultados válidos (diferentes de NO_EXIST)
-                    if (result + 1 < localBestLength)
-                    {
-                        localBestLength = result + 1;
-                    }
-                }
+                camino.pop_back();
+               
             }
         }
     }
 
-    // Si no se encontró un camino mejor, marcar la celda como no parte del camino óptimo
-    if (localBestLength < bestLength)
-    {
-        storage[pos_row][pos_column] = 1; // Solo marcar si es parte del camino más corto
-    }
-    else
-    {
-        storage[pos_row][pos_column] = 0; // Asegurarse de no marcar caminos no óptimos
-    }
 
-    return localBestLength == NO_EXIST ? NO_EXIST : localBestLength;
+    return 
 }
 
 /**
